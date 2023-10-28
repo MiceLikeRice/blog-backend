@@ -1,28 +1,34 @@
 const express = require("express");
 const router = express.Router();
-const config=require("../config/config.js");
-let mysql=require("mysql2");
+const config = require("../config/config.js");
+let mysql = require("mysql2");
 
-const pool=mysql.createPool(config.development.database);
+const pool = mysql.createPool(config.development.database);
 
-mysql=pool.promise();
-
+mysql = pool.promise();
 
 // 获取博客列表（带分页功能）
 // 获取博客列表（带分页和查询功能）
 // 获取博客列表（带分页、查询和分类功能）
 router.get("/blogcount", async (req, res) => {
-    let query="select count(*) as total from blog WHERE deleted = 0";
-    const [results] = await mysql.query(query);
-    res.send(results[0])
-})
+    try {
+        let query = "select count(*) as total from blog WHERE deleted = 0";
+        const [results] = await mysql.query(query);
+        res.send(results[0]);
+    } catch (error) {
+        console.error("Error in /blogcount:", error);
+        res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
+    }
+});
 
 router.get("/allblog", async (req, res) => {
     try {
         const page = req.query.page || 1;
         const perPage = 10; // 每页显示的博客数量
         const offset = (page - 1) * perPage;
-        let query = "SELECT blog_id, title, view_count, outline,upload_date,author, content_type, cover_image FROM blog";
+        let query = "SELECT blog_id, title, view_count, outline, upload_date, author, content_type, cover_image FROM blog";
         // 检查是否有查询参数
         if (req.query.search) {
             const search = req.query.search;
@@ -48,6 +54,8 @@ router.get("/allblog", async (req, res) => {
     } catch (error) {
         console.error("Error in /allblog:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 
@@ -65,6 +73,8 @@ router.get("/:id", async (req, res) => {
     } catch (error) {
         console.error("Error in /blog/:id:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 
@@ -72,13 +82,15 @@ router.get("/:id", async (req, res) => {
 router.post("/create", async (req, res) => {
     try {
         // 从请求体中获取博客信息
-        const { title, outline, body, author, content_type,cover_image } = req.body;
-        const query = "INSERT INTO blog (title, outline, body, author, content_type,cover_image,deleted,upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-        const result = await mysql.query(query, [title, outline, body, author, content_type,cover_image,0]);
+        const { title, outline, body, author, content_type, cover_image } = req.body;
+        const query = "INSERT INTO blog (title, outline, body, author, content_type, cover_image, deleted, upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        const result = await mysql.query(query, [title, outline, body, author, content_type, cover_image, 0]);
         res.send({ message: "Blog created", blogId: result.insertId });
     } catch (error) {
         console.error("Error in /create:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 
@@ -86,13 +98,15 @@ router.post("/create", async (req, res) => {
 router.put("/update/:id", async (req, res) => {
     try {
         const blogId = req.params.id;
-        const { title, outline, body, author, content_type,cover_image } = req.body;
-        const query = "UPDATE blog SET title = ?, outline = ?, body = ?, author = ?, content_type = ?,cover_image= ?,update_date=NOW() WHERE blog_id = ?";
-        const result = await mysql.query(query, [title, outline, body, author, content_type,  cover_image ,blogId]);
+        const { title, outline, body, author, content_type, cover_image } = req.body;
+        const query = "UPDATE blog SET title = ?, outline = ?, body = ?, author = ?, content_type = ?, cover_image = ?, update_date = NOW() WHERE blog_id = ?";
+        const result = await mysql.query(query, [title, outline, body, author, content_type, cover_image, blogId]);
         res.send("success");
     } catch (error) {
         console.error("Error in /update/:id:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 
@@ -106,6 +120,8 @@ router.put("/delete/:id", async (req, res) => {
     } catch (error) {
         console.error("Error in /delete/:id:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 
@@ -113,12 +129,14 @@ router.put("/delete/:id", async (req, res) => {
 router.put("/read/:id", async (req, res) => {
     try {
         const blogId = req.params.id;
-        const query = "UPDATE blog SET view_count= view_count + 1  WHERE blog_id = ?";
+        const query = "UPDATE blog SET view_count = view_count + 1  WHERE blog_id = ?";
         const result = await mysql.query(query, [blogId]);
         res.send("Blog readed");
     } catch (error) {
         console.error("Error in /read/:id:", error);
         res.status(500).send("Internal Server Error");
+    } finally {
+        mysql.release(); // 释放连接
     }
 });
 

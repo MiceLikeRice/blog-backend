@@ -5,7 +5,7 @@ module.exports={
             port:3306,
             user:"root",
             password:"15908136150ll",
-            database:"blog",
+            database:"blog"
         },
         serve:{
             port:50000,
@@ -18,7 +18,7 @@ module.exports={
             port:3306,
             user:"baobao",
             password:"12345678",
-            database:"swifttalk",
+            database:"swifttalk"
         },
         serve:{
             port:process.env.PORT || 80,

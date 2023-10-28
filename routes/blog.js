@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const mysql = require("../config/db.js");
+const config=require("../config/config.js");
+let mysql=require("mysql2");
+
+const pool=mysql.createPool(config.development.database);
+
+mysql=pool.promise();
+
 
 // 获取博客列表（带分页功能）
 // 获取博客列表（带分页和查询功能）

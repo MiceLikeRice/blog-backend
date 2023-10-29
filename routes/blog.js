@@ -15,7 +15,7 @@ const handleRequest = async (req, res, query, params,first) => {
         connection = await mysql.getConnection(); // 从连接池获取连接
         const [result] = await connection.query(query, params);
         console.log(result);
-        if (result.length > 0||result.affectedRows>0||result.changedRows>0) {
+        if (result.length >= 0||result.affectedRows>0||result.changedRows>0) {
             if(first)res.send(result[0]);
             else res.send(result);
         } else {
@@ -32,13 +32,39 @@ const handleRequest = async (req, res, query, params,first) => {
 };
 
 router.get("/blogcount", async (req, res) => {
-    let query = "SELECT count(*) as total FROM blog WHERE deleted = 0";
+
+
+    let query = "SELECT count(*) as total FROM blog";
+    
+    // 检查是否有查询参数
+    if (req.query.search) {
+        const search = req.query.search;
+        query += ` WHERE title LIKE '%${search}%' `;
+    }
+
+    // 检查是否有类型参数
+    if (req.query.type) {
+        const type = req.query.type;
+        if (query.includes("WHERE")) {
+            query += ` AND content_type = '${type}'`;
+        } else {
+            query += ` WHERE content_type = '${type}' `;
+        }
+    }
+
+    // 添加删除条件
+    if (query.includes("WHERE")) {
+        query += ` AND deleted = 0`;
+    } else {
+        query += ` WHERE deleted = 0`;
+    }
     await handleRequest(req, res,query,[],true);
 });
 
 // 获取博客列表
 router.get("/allblog", async (req, res) => {
     const page = req.query.page || 1;
+    console.log(req.query);
     const perPage = 10; // 每页显示的博客数量
     const offset = (page - 1) * perPage;
     let query = "SELECT blog_id, title, view_count, outline, upload_date, author, content_type, cover_image FROM blog";

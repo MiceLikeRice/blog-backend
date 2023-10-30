@@ -91,9 +91,9 @@ router.get("/allblog", async (req, res) => {
     } else {
         query += ` WHERE deleted = 0`;
     }
-    query+="order by upload_date dec";
+    query+=" order by update_date desc";
     query += ` LIMIT ${offset}, ${perPage}`;
-
+    console.log(query);
     await handleRequest(req, res, query,[],false);
 });
 
@@ -108,7 +108,25 @@ router.get("/:id", async (req, res) => {
 router.post("/create", async (req, res) => {
     const { title, outline, body, author, content_type, cover_image } = req.body;
     const query = "INSERT INTO blog (title, outline, body, author, content_type,cover_image,deleted,upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
-    handleRequest(req, res, query, [title, outline, body, author, content_type, cover_image, 0],true);
+    let connection; // 声明连接对象
+
+    try {
+        connection = await mysql.getConnection(); // 从连接池获取连接
+        const [result] = await connection.query(query, [title, outline, body, author, content_type, cover_image, 0]);
+        if (result.length >= 0||result.affectedRows>0||result.changedRows>0) {
+            console.log(result)
+            res.send({blog_id:result.insertId});
+        } else {
+            res.status(404).send("Blog not found");
+        }
+    } catch (error) {
+        console.error("Error in route:", error);
+        res.status(500).send("Internal Server Error");
+    } finally {
+        if (connection) {
+            connection.release(); // 释放连接
+        }
+    }
 });
 
 // 更新博客

@@ -13,6 +13,8 @@ app.use(bodyParser.json()); // for JSON data
 //app.use(require("./middlewares/AuthMiddleware"));
 
 app.use("/api",router); //所有的请求
+app.get("/test", async (req, res) => {
+    res.send("success");
+})
 
-
-app.listen(port,()=>console.log(`开始监听${port}端口`))
+app.listen(50000,()=>console.log(`开始监听${port}端口`))

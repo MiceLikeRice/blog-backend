@@ -107,7 +107,7 @@ router.get("/:id", async (req, res) => {
 // 创建新博客
 router.post("/create", async (req, res) => {
     const { title, outline, body, author, content_type, cover_image } = req.body;
-    const query = "INSERT INTO blog (title, outline, body, author, content_type,cover_image,deleted,upload_date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+    const query = "INSERT INTO blog (title, outline, body, author, content_type,cover_image,deleted,upload_date,update_date) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(),NOW())";
     let connection; // 声明连接对象
 
     try {

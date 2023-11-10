@@ -92,8 +92,9 @@ router.get("/allblog", async (req, res) => {
         query += ` WHERE deleted = 0`;
     }
     query+=" order by update_date desc";
-    query += ` LIMIT ${offset}, ${perPage}`;
     console.log(query);
+    console.log(req.query.no_page);
+    if(!req.query.no_page) query += ` LIMIT ${offset}, ${perPage}`;
     await handleRequest(req, res, query,[],false);
 });
 
